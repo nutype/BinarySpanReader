@@ -7,6 +7,7 @@ namespace BinarySpanReaderLib.Tests
 {
     public class SpanExtensionsTests
     {
+        #region ReadUInt32BigEndian
         private static ReadOnlyMemory<byte> Uint32BETestData = new byte[]
         {
             // 0
@@ -52,6 +53,19 @@ namespace BinarySpanReaderLib.Tests
             new object[] { Uint32BETestData, 11 * sizeof(uint), (uint)65_536 },
             new object[] { Uint32BETestData, 12 * sizeof(uint), uint.MaxValue }
         };
+
+        [TestCaseSource(nameof(Uint32BETestCases))]
+        public void ReadUInt32BigEndian_IsValid(ReadOnlyMemory<byte> mem, int position, uint expectedValue) =>
+            Assert.That(mem.Span.ReadUInt32BigEndian(position), Is.EqualTo(expectedValue));
+
+        [TestCase(-1)]
+        [TestCase(500)]
+        public void ReadUint32BigEndian_Throws_OnInvalidPosition(int position) =>
+            Assert.That(() => Uint32BETestData.Span.ReadUInt32BigEndian(position),
+                Throws.TypeOf<IndexOutOfRangeException>());
+        #endregion
+
+        #region ReadUInt32LittleEndian
         private static ReadOnlyMemory<byte> Uint32LETestData = new byte[]
         {
             // 0
@@ -98,16 +112,6 @@ namespace BinarySpanReaderLib.Tests
             new object[] { Uint32LETestData, 12 * sizeof(uint), uint.MaxValue }
         };
 
-        [TestCaseSource(nameof(Uint32BETestCases))]
-        public void ReadUInt32BigEndian_IsValid(ReadOnlyMemory<byte> mem, int position, uint expectedValue) =>
-            Assert.That(mem.Span.ReadUInt32BigEndian(position), Is.EqualTo(expectedValue));
-
-        [TestCase(-1)]
-        [TestCase(500)]
-        public void ReadUint32BigEndian_Throws_OnInvalidPosition(int position) =>
-            Assert.That(() => Uint32BETestData.Span.ReadUInt32BigEndian(position),
-                Throws.TypeOf<IndexOutOfRangeException>());
-
         [TestCaseSource(nameof(Uint32LETestCases))]
         public void ReadUInt32LittleEndian_IsValid(ReadOnlyMemory<byte> mem, int position, uint expectedValue) =>
             Assert.That(mem.Span.ReadUInt32LittleEndian(position), Is.EqualTo(expectedValue));
@@ -117,5 +121,6 @@ namespace BinarySpanReaderLib.Tests
         public void ReadUint32LittleEndian_Throws_OnInvalidPosition(int position) =>
             Assert.That(() => Uint32LETestData.Span.ReadUInt32LittleEndian(position),
                 Throws.TypeOf<IndexOutOfRangeException>());
+        #endregion
     }
 }

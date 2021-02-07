@@ -17,15 +17,12 @@ namespace BinarySpanReaderLib
         /// <returns></returns>
         /// <exception cref="IndexOutOfRangeException"><paramref name="position"/> is outside the range
         /// of the <see cref="ReadOnlySpan{T}"/>.</exception>
-        public static uint ReadUInt32BigEndian(this ReadOnlySpan<byte> span, int position)
-        {
-            uint num = 0;
-
-            for (int i = 0, j = 3; i < 4; i++, j--)
-                num |= (uint)span[position + i] << (j * 8);
-
-            return num;
-        }
+        public static uint ReadUInt32BigEndian(this ReadOnlySpan<byte> span, int position) =>
+            unchecked(
+                ((uint)span[position] << 24) |
+                ((uint)span[position + 1] << 16) |
+                ((uint)span[position + 2] << 8) |
+                span[position + 3]);
 
         /// <summary>
         /// Read an unsigned, 32-bit integer using Little Endian (LE) from a <see cref="ReadOnlySpan{T}"/>
@@ -36,14 +33,11 @@ namespace BinarySpanReaderLib
         /// <returns></returns>
         /// <exception cref="IndexOutOfRangeException"><paramref name="position"/> is outside the range
         /// of the <see cref="ReadOnlySpan{T}"/>.</exception>
-        public static uint ReadUInt32LittleEndian(this ReadOnlySpan<byte> span, int position)
-        {
-            uint num = 0;
-
-            for (int i = 0; i < 4; i++)
-                num |= (uint)span[position + i] << (i * 8);
-
-            return num;
-        }
+        public static uint ReadUInt32LittleEndian(this ReadOnlySpan<byte> span, int position) =>
+            unchecked(
+                span[position] |
+                ((uint)span[position + 1] << 8) |
+                ((uint)span[position + 2] << 16) |
+                ((uint)span[position + 3] << 24));
     }
 }
