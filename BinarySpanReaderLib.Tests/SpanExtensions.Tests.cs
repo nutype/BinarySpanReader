@@ -7,6 +7,38 @@ namespace BinarySpanReaderLib.Tests
 {
     public class SpanExtensionsTests
     {
+        #region Enums
+        public enum RegularEnum
+        {
+            Foo,
+            Bar,
+            Baz
+        }
+
+        public enum UintEnum : uint
+        {
+            Foo,
+            Bar,
+            Baz
+        }
+
+        [Flags]
+        public enum RegularFlagsEnum
+        {
+            None,
+            Foo,
+            Bar
+        }
+
+        [Flags]
+        public enum UintFlagsEnum : uint
+        {
+            None,
+            Foo,
+            Bar
+        }
+        #endregion
+
         #region ReadUInt32BigEndian
         private static ReadOnlyMemory<byte> Uint32BETestData = new byte[]
         {
@@ -37,7 +69,7 @@ namespace BinarySpanReaderLib.Tests
             // uint.MaxValue
             255, 255, 255, 255
         };
-        private static object[] Uint32BETestCases = new object[]
+        private static readonly object[] Uint32BETestCases = new object[]
         {
             new object[] { Uint32BETestData, 0, (uint)0 },
             new object[] { Uint32BETestData, 1 * sizeof(uint), (uint)1 },
@@ -57,6 +89,37 @@ namespace BinarySpanReaderLib.Tests
         [TestCaseSource(nameof(Uint32BETestCases))]
         public void ReadUInt32BigEndian_IsValid(ReadOnlyMemory<byte> mem, int position, uint expectedValue) =>
             Assert.That(mem.Span.ReadUInt32BigEndian(position), Is.EqualTo(expectedValue));
+
+        private static readonly object[] UInt32BEUintEnumTestCases = new object[]
+        {
+            new object[] { Uint32BETestData, 0, UintEnum.Foo },
+            new object[] { Uint32BETestData, 1 * sizeof(int), UintEnum.Bar },
+            new object[] { Uint32BETestData, 2 * sizeof(int), UintEnum.Baz }
+        };
+
+        [TestCaseSource(nameof(UInt32BEUintEnumTestCases))]
+        public void ReadUInt32BigEndian_UintEnum(ReadOnlyMemory<byte> mem, int position, UintEnum enumVal) =>
+            Assert.That(mem.Span.ReadUInt32BigEndianEnum<UintEnum>(position), Is.EqualTo(enumVal));
+
+        [TestCase(0)]
+        [TestCase(1 * sizeof(int))]
+        [TestCase(2 * sizeof(int))]
+        public void ReadUInt32BigEndian_RegularEnum_ThrowsException(int position) =>
+            Assert.That(() => Int32BETestData.Span.ReadUInt32BigEndianEnum<RegularEnum>(position),
+                Throws.TypeOf<InvalidCastException>());
+
+        private static readonly object[] Uint32BEUintFlagsEnumTestCases = new object[]
+        {
+            new object[] { Uint32BETestData, 0, UintFlagsEnum.None },
+            new object[] { Uint32BETestData, 1 * sizeof(int), UintFlagsEnum.Foo },
+            new object[] { Uint32BETestData, 2 * sizeof(int), UintFlagsEnum.Bar },
+            new object[] { new ReadOnlyMemory<byte>(new byte[] { 0, 0, 0, 3 }), 0,
+                UintFlagsEnum.Foo | UintFlagsEnum.Bar }
+        };
+
+        [TestCaseSource(nameof(Uint32BEUintFlagsEnumTestCases))]
+        public void ReadUint32BigEndian_UintFlagsEnum(ReadOnlyMemory<byte> mem, int position, UintFlagsEnum enumVal) =>
+            Assert.That(mem.Span.ReadUInt32BigEndianEnum<UintFlagsEnum>(position), Is.EqualTo(enumVal));
 
         [TestCase(-1)]
         [TestCase(500)]
@@ -95,7 +158,7 @@ namespace BinarySpanReaderLib.Tests
             // uint.MaxValue
             255, 255, 255, 255
         };
-        private static object[] Uint32LETestCases = new object[]
+        private static readonly object[] Uint32LETestCases = new object[]
         {
             new object[] { Uint32LETestData, 0, (uint)0 },
             new object[] { Uint32LETestData, 1 * sizeof(uint), (uint)1 },
@@ -115,6 +178,37 @@ namespace BinarySpanReaderLib.Tests
         [TestCaseSource(nameof(Uint32LETestCases))]
         public void ReadUInt32LittleEndian_IsValid(ReadOnlyMemory<byte> mem, int position, uint expectedValue) =>
             Assert.That(mem.Span.ReadUInt32LittleEndian(position), Is.EqualTo(expectedValue));
+
+        private static readonly object[] UInt32LEUintEnumTestCases = new object[]
+        {
+            new object[] { Uint32LETestData, 0, UintEnum.Foo },
+            new object[] { Uint32LETestData, 1 * sizeof(int), UintEnum.Bar },
+            new object[] { Uint32LETestData, 2 * sizeof(int), UintEnum.Baz }
+        };
+
+        [TestCaseSource(nameof(UInt32LEUintEnumTestCases))]
+        public void ReadUInt32LittleEndian_UintEnum(ReadOnlyMemory<byte> mem, int position, UintEnum enumVal) =>
+            Assert.That(mem.Span.ReadUInt32LittleEndianEnum<UintEnum>(position), Is.EqualTo(enumVal));
+
+        [TestCase(0)]
+        [TestCase(1 * sizeof(int))]
+        [TestCase(2 * sizeof(int))]
+        public void ReadUInt32LittleEndian_RegularEnum_ThrowsException(int position) =>
+            Assert.That(() => Int32LETestData.Span.ReadUInt32LittleEndianEnum<RegularEnum>(position),
+                Throws.TypeOf<InvalidCastException>());
+
+        private static readonly object[] Uint32LEUintFlagsEnumTestCases = new object[]
+        {
+            new object[] { Uint32LETestData, 0, UintFlagsEnum.None },
+            new object[] { Uint32LETestData, 1 * sizeof(int), UintFlagsEnum.Foo },
+            new object[] { Uint32LETestData, 2 * sizeof(int), UintFlagsEnum.Bar },
+            new object[] { new ReadOnlyMemory<byte>(new byte[] { 3, 0, 0, 0 }), 0,
+                UintFlagsEnum.Foo | UintFlagsEnum.Bar }
+        };
+
+        [TestCaseSource(nameof(Uint32LEUintFlagsEnumTestCases))]
+        public void ReadUint32LittleEndian_UintFlagsEnum(ReadOnlyMemory<byte> mem, int position, UintFlagsEnum enumVal) =>
+            Assert.That(mem.Span.ReadUInt32LittleEndianEnum<UintFlagsEnum>(position), Is.EqualTo(enumVal));
 
         [TestCase(-1)]
         [TestCase(500)]
@@ -177,7 +271,7 @@ namespace BinarySpanReaderLib.Tests
             // Int.MinValue
             128, 0, 0, 0
         };
-        private static object[] Int32BETestCases = new object[]
+        private static readonly object[] Int32BETestCases = new object[]
         {
             new object[] { Int32BETestData, 0, 0 },
             new object[] { Int32BETestData, 1 * sizeof(int), 1 },
@@ -210,6 +304,37 @@ namespace BinarySpanReaderLib.Tests
         [TestCaseSource(nameof(Int32BETestCases))]
         public void ReadInt32BigEndian_IsValid(ReadOnlyMemory<byte> mem, int position, int expectedValue) =>
             Assert.That(mem.Span.ReadInt32BigEndian(position), Is.EqualTo(expectedValue));
+
+        private static readonly object[] Int32BERegularEnumTestCases = new object[]
+        {
+            new object[] { Int32BETestData, 0, RegularEnum.Foo },
+            new object[] { Int32BETestData, 1 * sizeof(int), RegularEnum.Bar },
+            new object[] { Int32BETestData, 2 * sizeof(int), RegularEnum.Baz }
+        };
+
+        [TestCaseSource(nameof(Int32BERegularEnumTestCases))]
+        public void ReadInt32BigEndian_RegularEnum(ReadOnlyMemory<byte> mem, int position, RegularEnum enumVal) =>
+            Assert.That(mem.Span.ReadInt32BigEndianEnum<RegularEnum>(position), Is.EqualTo(enumVal));
+
+        [TestCase(0)]
+        [TestCase(1 * sizeof(int))]
+        [TestCase(2 * sizeof(int))]
+        public void ReadInt32BigEndian_UintEnum_ThrowsException(int position) =>
+            Assert.That(() => Uint32BETestData.Span.ReadInt32BigEndianEnum<UintEnum>(position),
+                Throws.TypeOf<InvalidCastException>());
+
+        private static readonly object[] Int32BERegularFlagsEnumTestCases = new object[]
+        {
+            new object[] { Int32BETestData, 0, RegularFlagsEnum.None },
+            new object[] { Int32BETestData, 1 * sizeof(int), RegularFlagsEnum.Foo },
+            new object[] { Int32BETestData, 2 * sizeof(int), RegularFlagsEnum.Bar },
+            new object[] { new ReadOnlyMemory<byte>(new byte[] { 0, 0, 0, 3 }), 0, 
+                RegularFlagsEnum.Foo | RegularFlagsEnum.Bar }
+        };
+
+        [TestCaseSource(nameof(Int32BERegularFlagsEnumTestCases))]
+        public void ReadInt32BigEndian_RegularFlagsEnum(ReadOnlyMemory<byte> mem, int position, RegularFlagsEnum enumVal) =>
+            Assert.That(mem.Span.ReadInt32BigEndianEnum<RegularFlagsEnum>(position), Is.EqualTo(enumVal));
 
         [TestCase(-1)]
         [TestCase(500)]
@@ -272,7 +397,7 @@ namespace BinarySpanReaderLib.Tests
             // Int.MinValue
             0, 0, 0, 128
         };
-        private static object[] Int32LETestCases = new object[]
+        private static readonly object[] Int32LETestCases = new object[]
         {
             new object[] { Int32LETestData, 0, 0 },
             new object[] { Int32LETestData, 1 * sizeof(int), 1 },
@@ -306,11 +431,42 @@ namespace BinarySpanReaderLib.Tests
         public void ReadInt32LittleEndian_IsValid(ReadOnlyMemory<byte> mem, int position, int expectedValue) =>
             Assert.That(mem.Span.ReadInt32LittleEndian(position), Is.EqualTo(expectedValue));
 
+        private static readonly object[] Int32LERegularEnumTestCases = new object[]
+        {
+            new object[] { Int32LETestData, 0, RegularEnum.Foo },
+            new object[] { Int32LETestData, 1 * sizeof(int), RegularEnum.Bar },
+            new object[] { Int32LETestData, 2 * sizeof(int), RegularEnum.Baz }
+        };
+
+        [TestCaseSource(nameof(Int32LERegularEnumTestCases))]
+        public void ReadInt32LittleEndian_RegularEnum(ReadOnlyMemory<byte> mem, int position, RegularEnum enumVal) =>
+            Assert.That(mem.Span.ReadInt32LittleEndianEnum<RegularEnum>(position), Is.EqualTo(enumVal));
+
+        [TestCase(0)]
+        [TestCase(1 * sizeof(int))]
+        [TestCase(2 * sizeof(int))]
+        public void ReadInt32LittleEndian_UintEnum_ThrowsException(int position) =>
+            Assert.That(() => Uint32LETestData.Span.ReadInt32LittleEndianEnum<UintEnum>(position),
+                Throws.TypeOf<InvalidCastException>());
+
+        private static readonly object[] Int32LERegularFlagsEnumTestCases = new object[]
+        {
+            new object[] { Int32LETestData, 0, RegularFlagsEnum.None },
+            new object[] { Int32LETestData, 1 * sizeof(int), RegularFlagsEnum.Foo },
+            new object[] { Int32LETestData, 2 * sizeof(int), RegularFlagsEnum.Bar },
+            new object[] { new ReadOnlyMemory<byte>(new byte[] { 3, 0, 0, 0 }), 0,
+                RegularFlagsEnum.Foo | RegularFlagsEnum.Bar }
+        };
+
+        [TestCaseSource(nameof(Int32LERegularFlagsEnumTestCases))]
+        public void ReadInt32LittleEndian_RegularFlagsEnum(ReadOnlyMemory<byte> mem, int position, RegularFlagsEnum enumVal) =>
+            Assert.That(mem.Span.ReadInt32LittleEndianEnum<RegularFlagsEnum>(position), Is.EqualTo(enumVal));
+
         [TestCase(-1)]
         [TestCase(500)]
         public void ReadInt32LittleEndian_Throws_OnInvalidPosition(int position) =>
             Assert.That(() => Int32LETestData.Span.ReadInt32LittleEndian(position),
                 Throws.TypeOf<IndexOutOfRangeException>());
-        #endregion
+        #endregion 
     }
 }
