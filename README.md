@@ -6,7 +6,7 @@ extension methods to ReadOnlySpan&lt;byte> and ReadOnlyMemory&lt;byte>.
 You can either:
 
 * read individual `uint` or `int` values using Big/Little Endian at a specific byte
-  position within a `ReadOnlySpan&lt;byte>` or `ReadOnlyMemory&lt;byte>` using one of the
+  position within a `ReadOnlySpan<byte>` or `ReadOnlyMemory<byte>` using one of the
   various extension methods (e.g., `ReadInt32LittleEndian()`); or
 * create a readonly reference to a `struct` created using `CreateStruct&lt;TStruct>()`, although
   the endianess cannot currently be controlled with this extension method and so the endianess of
@@ -19,7 +19,7 @@ You can also, optionally, read individual `uint` or `int` values as an `enum` (i
 ## Creating Structs
 Perhaps the most useful extension method is the `CreateStruct&lt;TStruct>()` method which takes in
 a `TStruct` generic type (which must be a `struct` and ideally a `readonly struct`) and byte position
-within a `ReadOnlySpan&lt;byte>` or `ReadOnlyMemory&lt;byte>` and creates the struct in a fashion
+within a `ReadOnlySpan<byte>` or `ReadOnlyMemory<byte>` and creates the struct in a fashion
 similar to `Marshal.StructureToPtr()`, but uses `MemoryMarshal.AsRef&lt;TStruct>()` instead.
 
 The memory layout of the `TStruct` _should_ be controlled via the `[StructLayout]` attribute.
