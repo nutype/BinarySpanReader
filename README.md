@@ -20,7 +20,7 @@ You can also, optionally, read individual `uint` or `int` values as an `enum` (i
 Perhaps the most useful extension method is the `CreateStruct<TStruct>()` method which takes in
 a `TStruct` generic type (which must be a `struct` and ideally a `readonly struct`) and byte position
 within a `ReadOnlySpan<byte>` or `ReadOnlyMemory<byte>` and creates the struct in a fashion
-similar to `Marshal.StructureToPtr()`, but uses `MemoryMarshal.AsRef&lt;TStruct>()` instead.
+similar to `Marshal.StructureToPtr()`, but uses `MemoryMarshal.AsRef<TStruct>()` instead.
 
 The memory layout of the `TStruct` _should_ be controlled via the `[StructLayout]` attribute.
 
