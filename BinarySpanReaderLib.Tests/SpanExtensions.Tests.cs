@@ -2,6 +2,7 @@ using NUnit.Framework;
 using System;
 using System.Buffers.Binary;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace BinarySpanReaderLib.Tests
 {
@@ -36,6 +37,78 @@ namespace BinarySpanReaderLib.Tests
             None,
             Foo,
             Bar
+        }
+        #endregion
+
+        #region structs
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct SimpleStruct
+        {
+            public int Int32Value;
+            public uint UInt32Value;
+            public RegularEnum RegularEnum;
+            public UintEnum UintEnum;
+            public RegularFlagsEnum RegularFlagsEnum;
+            public UintFlagsEnum UintFlagsEnum;
+
+            public override bool Equals(object? obj) =>
+                (obj is SimpleStruct simpleStruct) && Equals(simpleStruct);
+
+            public bool Equals(SimpleStruct simpleStruct) =>
+                Int32Value == simpleStruct.Int32Value &&
+                UInt32Value == simpleStruct.UInt32Value &&
+                RegularEnum == simpleStruct.RegularEnum &&
+                UintEnum == simpleStruct.UintEnum &&
+                RegularFlagsEnum == simpleStruct.RegularFlagsEnum &&
+                UintFlagsEnum == simpleStruct.UintFlagsEnum;
+
+            public override int GetHashCode() => base.GetHashCode();
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct FooStruct
+        {
+            public uint Foo;
+            public int Bar;
+            public ulong Reserved1;
+
+            public override bool Equals(object? obj) =>
+                (obj is FooStruct fooStruct) && Equals(fooStruct);
+
+            public bool Equals(FooStruct fooStruct) =>
+                Foo == fooStruct.Foo &&
+                Bar == fooStruct.Bar &&
+                Reserved1 == fooStruct.Reserved1;
+
+            public override int GetHashCode() => base.GetHashCode();
+
+            public static bool operator ==(FooStruct a, FooStruct b) => a.Equals(b);
+            public static bool operator !=(FooStruct a, FooStruct b) => a.Equals(b) is not true;
+        }
+
+        public struct InnerStruct
+        {
+            public ulong Foo;
+            public long Bar;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct OuterStruct
+        {
+            public uint Foo;
+            public int Bar;
+            public InnerStruct InnerStruct;
+
+            public override bool Equals(object? obj) =>
+                (obj is OuterStruct outerStruct) && Equals(outerStruct);
+
+            public bool Equals(OuterStruct outerStruct) =>
+                Foo == outerStruct.Foo &&
+                Bar == outerStruct.Bar &&
+                InnerStruct.Foo == outerStruct.InnerStruct.Foo &&
+                InnerStruct.Bar == outerStruct.InnerStruct.Bar;
+
+            public override int GetHashCode() => base.GetHashCode();
         }
         #endregion
 
@@ -328,7 +401,7 @@ namespace BinarySpanReaderLib.Tests
             new object[] { Int32BETestData, 0, RegularFlagsEnum.None },
             new object[] { Int32BETestData, 1 * sizeof(int), RegularFlagsEnum.Foo },
             new object[] { Int32BETestData, 2 * sizeof(int), RegularFlagsEnum.Bar },
-            new object[] { new ReadOnlyMemory<byte>(new byte[] { 0, 0, 0, 3 }), 0, 
+            new object[] { new ReadOnlyMemory<byte>(new byte[] { 0, 0, 0, 3 }), 0,
                 RegularFlagsEnum.Foo | RegularFlagsEnum.Bar }
         };
 
@@ -467,6 +540,74 @@ namespace BinarySpanReaderLib.Tests
         public void ReadInt32LittleEndian_Throws_OnInvalidPosition(int position) =>
             Assert.That(() => Int32LETestData.Span.ReadInt32LittleEndian(position),
                 Throws.TypeOf<IndexOutOfRangeException>());
-        #endregion 
+        #endregion
+
+        #region CreateStruct
+        [Test]
+        public void CreateStruct_SimpleStruct_Works() =>
+            Assert.That(new ReadOnlyMemory<byte>(new byte[]
+                {
+                    // Int32Value
+                    0, 0, 0, 0,
+                    // UInt32Value
+                    16, 0, 0, 0,
+                    // RegularEnum.Bar
+                    1, 0, 0, 0,
+                    // UintEnum.Baz
+                    2, 0, 0, 0,
+                    // RegularFlagsEnum
+                    3, 0, 0, 0,
+                    // UintFlagsEnum
+                    0, 0, 0, 0
+                }).CreateStruct<SimpleStruct>(0), Is.EqualTo(new SimpleStruct
+                {
+                    Int32Value = 0,
+                    UInt32Value = 16,
+                    RegularEnum = RegularEnum.Bar,
+                    UintEnum = UintEnum.Baz,
+                    RegularFlagsEnum = RegularFlagsEnum.Foo | RegularFlagsEnum.Bar,
+                    UintFlagsEnum = UintFlagsEnum.None
+                }));
+
+        [Test]
+        public void CreateStruct_FooStruct_Works() =>
+            Assert.That(new ReadOnlyMemory<byte>(new byte[]
+                {
+                    //public uint Foo;
+                    1, 0, 0, 0,
+                    //public int Bar;
+                    2, 0, 0, 0,
+                    //public ulong Reserved1;
+                    3, 0, 0, 0, 0, 0, 0, 0
+                }).CreateStruct<FooStruct>(0), Is.EqualTo(new FooStruct
+                {
+                    Foo = 1,
+                    Bar = 2,
+                    Reserved1 = 3
+                }));
+
+        [Test]
+        public void CreateStruct_OuterStruct_Works() =>
+            Assert.That(new ReadOnlyMemory<byte>(new byte[]
+                {
+                    //public uint Foo;
+                    1, 0, 0, 0,
+                    //public int Bar;
+                    255, 255, 255, 255,
+                    //public ulong Foo;
+                    255, 0, 0, 0, 0, 0, 0, 0,
+                    //public long Bar;
+                    255, 0, 0, 0, 0, 0, 0, 0
+                }).CreateStruct<OuterStruct>(0), Is.EqualTo(new OuterStruct
+                {
+                    Foo = 1,
+                    Bar = -1,
+                    InnerStruct = new InnerStruct
+                    {
+                        Foo = 255,
+                        Bar = 255
+                    }
+                }));
+        #endregion
     }
 }
