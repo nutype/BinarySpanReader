@@ -609,5 +609,35 @@ namespace BinarySpanReaderLib.Tests
                     }
                 }));
         #endregion
+
+        #region WriteToMemory
+        [Test]
+        public void WriteToMemory_Works()
+        {
+            var @struct = new OuterStruct
+            {
+                Foo = 1,
+                Bar = -1,
+                InnerStruct = new InnerStruct
+                {
+                    Foo = 255,
+                    Bar = 255
+                }
+            };
+            CollectionAssert.AreEqual(
+                new byte[]
+                {
+                    //public uint Foo;
+                    1, 0, 0, 0,
+                    //public int Bar;
+                    255, 255, 255, 255,
+                    //public ulong Foo;
+                    255, 0, 0, 0, 0, 0, 0, 0,
+                    //public long Bar;
+                    255, 0, 0, 0, 0, 0, 0, 0
+                },
+                SpanExtensions.WriteToMemory(ref @struct).ToArray());
+        }
+        #endregion
     }
 }

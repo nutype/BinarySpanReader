@@ -8,6 +8,10 @@ using System.Threading.Tasks;
 
 namespace BinarySpanReaderLib
 {
+    /// <summary>
+    /// Extension methods for <see cref="ReadOnlySpan{T}"/> and <see cref="ReadOnlyMemory{T}"/> which
+    /// read various common data types (e.g., <see cref="int"/>) or structs.
+    /// </summary>
     public static class SpanExtensions
     {
         #region UInt32
@@ -96,7 +100,7 @@ namespace BinarySpanReaderLib
                 span[position + 3]);
 
         /// <summary>
-        /// Read a signed, 32-bit integer using Big Endian (BE) from a <see cref="ReadOnlySpan{T}"/>
+        /// Read a signed, 32-bit integer using Big Endian (BE) from a <see cref="ReadOnlyMemory{T}"/>
         /// at a specific <paramref name="position"/>.
         /// </summary>
         /// <param name="memory"></param>
@@ -125,7 +129,7 @@ namespace BinarySpanReaderLib
             (TEnum)(object)ReadInt32BigEndian(span, position);
 
         /// <summary>
-        /// Reads a signed, 32-bit integer using Big Endian (BE) from a <see cref="ReadOnlySpan{T}"/>
+        /// Reads a signed, 32-bit integer using Big Endian (BE) from a <see cref="ReadOnlyMemory{T}"/>
         /// at a specific <paramref name="position"/> and casts it to a regular <see cref="int"/>
         /// <typeparamref name="TEnum"/> enum.
         /// </summary>
@@ -158,7 +162,7 @@ namespace BinarySpanReaderLib
                 (span[position + 3] << 24));
 
         /// <summary>
-        /// Read a signed, 32-bit integer using Little Endian (LE) from a <see cref="ReadOnlySpan{T}"/>
+        /// Read a signed, 32-bit integer using Little Endian (LE) from a <see cref="ReadOnlyMemory{T}"/>
         /// at a specific <paramref name="position"/>.
         /// </summary>
         /// <param name="memory"></param>
@@ -187,7 +191,7 @@ namespace BinarySpanReaderLib
             (TEnum)(object)ReadInt32LittleEndian(span, position);
 
         /// <summary>
-        /// Reads a signed, 32-bit integer using Little Endian (LE) from a <see cref="ReadOnlySpan{T}"/>
+        /// Reads a signed, 32-bit integer using Little Endian (LE) from a <see cref="ReadOnlyMemory{T}"/>
         /// at a specific <paramref name="position"/> and casts it to a regular <see cref="int"/>
         /// <typeparamref name="TEnum"/> enum.
         /// </summary>
@@ -235,6 +239,23 @@ namespace BinarySpanReaderLib
         /// <seealso cref="BitConverter.IsLittleEndian"/>
         public static ref readonly TStruct CreateStruct<TStruct>(this ReadOnlyMemory<byte> memory, int position)
             where TStruct : struct => ref CreateStruct<TStruct>(memory.Span, position);
+        #endregion
+
+        #region WriteToMemory
+        /// <summary>
+        /// Writes a <typeparamref name="TStruct"/> to memory inside a
+        /// <see cref="ReadOnlySpan{T}"/>.  The endianess of the data types in <typeparamref name="TStruct"/>
+        /// is based on the machine's endianess.
+        /// </summary>
+        /// <typeparam name="TStruct"></typeparam>
+        /// <param name="struct">The <typeparamref name="TStruct"/> to write to memory.</param>
+        /// <returns></returns>
+        public static ReadOnlySpan<byte> WriteToMemory<TStruct>(ref TStruct @struct) where TStruct : struct
+        {
+            var span = new Span<byte>(new byte[Marshal.SizeOf<TStruct>()]);
+            MemoryMarshal.Write(span, ref @struct);
+            return span;
+        }
         #endregion
     }
 }
